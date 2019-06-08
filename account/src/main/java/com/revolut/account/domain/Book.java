@@ -1,13 +1,13 @@
 package com.revolut.account.domain;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-@Value
+@Data
 @Builder
 public class Book {
     private UUID id;
