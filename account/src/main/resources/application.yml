@@ -8,7 +8,7 @@ endpoints:
 
 datasources:
   default:
-    url: jdbc:h2:mem:account_db
+    url: jdbc:h2:mem:account_db;DB_CLOSE_DELAY=-1
     username: sa
     password: ""
     driverClassName: org.h2.Driver
@@ -16,4 +16,4 @@ datasources:
 flyway:
   datasources:
     default:
-      locations: classpath:migrations
+      locations: classpath:db/migration
