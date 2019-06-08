@@ -1,4 +1,7 @@
-package com.revolut.account
+package com.revolut.account.repository
+
+import com.revolut.account.domain.Account
+import com.revolut.account.domain.Currency
 
 import java.time.Instant
 

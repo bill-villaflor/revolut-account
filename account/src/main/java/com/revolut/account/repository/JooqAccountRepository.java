@@ -1,5 +1,6 @@
-package com.revolut.account;
+package com.revolut.account.repository;
 
+import com.revolut.account.domain.Account;
 import org.jooq.DSLContext;
 
 import static com.revolut.account.jooq.tables.Accounts.ACCOUNTS;

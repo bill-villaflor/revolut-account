@@ -1,4 +1,4 @@
-package com.revolut.account;
+package com.revolut.account.domain;
 
 import lombok.Builder;
 import lombok.Value;
@@ -9,11 +9,10 @@ import java.util.UUID;
 
 @Value
 @Builder
-public class Book {
+public class Account {
     private UUID id;
-    private BigDecimal credit;
-    private BigDecimal debit;
-    private UUID sourceAccount;
-    private UUID targetAccount;
+    private UUID customer;
+    private Currency currency;
     private Instant creationDate;
+    private BigDecimal balance;
 }

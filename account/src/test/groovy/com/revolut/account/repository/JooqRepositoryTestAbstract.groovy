@@ -1,4 +1,4 @@
-package com.revolut.account
+package com.revolut.account.repository
 
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.configuration.ClassicConfiguration
