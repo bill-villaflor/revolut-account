@@ -6,8 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Wither;
 
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 @Data
@@ -17,8 +19,17 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Account {
     private UUID id;
+
+    @NotNull
     private UUID customer;
+
+    @NotNull
     private Currency currency;
+
     private Instant creationDate;
-    private BigDecimal balance;
+    private BigDecimal balance = BigDecimal.ZERO;
+
+    public void setBalance(BigDecimal balance) {
+        this.balance = Objects.isNull(balance) ? BigDecimal.ZERO : balance;
+    }
 }
