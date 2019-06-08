@@ -1,0 +1,7 @@
+micronaut:
+  application:
+    name: account
+
+endpoints:
+  health:
+    enabled: true
