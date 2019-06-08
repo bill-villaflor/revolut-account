@@ -13,12 +13,12 @@ public class JooqAccountRepository implements AccountRepository {
     }
 
     @Override
-    public Account create(Account account) {
+    public Account save(Account account) {
         dslContext.insertInto(ACCOUNTS)
                 .set(ACCOUNTS.ID, account.getId())
                 .set(ACCOUNTS.CUSTOMER_ID, account.getCustomer())
                 .set(ACCOUNTS.CURRENCY, account.getCurrency().toString())
-                .set(ACCOUNTS.CREATION_DATE, account.getCreatedDate().atOffset(UTC))
+                .set(ACCOUNTS.CREATION_DATE, account.getCreationDate().atOffset(UTC))
                 .execute();
 
         return account;

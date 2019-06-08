@@ -9,10 +9,11 @@ import java.util.UUID;
 
 @Value
 @Builder
-public class Account {
+public class Book {
     private UUID id;
-    private UUID customer;
-    private Currency currency;
+    private BigDecimal credit;
+    private BigDecimal debit;
+    private UUID sourceAccount;
+    private UUID targetAccount;
     private Instant creationDate;
-    private BigDecimal balance;
 }
