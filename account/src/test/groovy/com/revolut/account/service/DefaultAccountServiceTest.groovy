@@ -3,6 +3,9 @@ package com.revolut.account.service
 import com.revolut.account.domain.Account
 import com.revolut.account.domain.Book
 import com.revolut.account.domain.Currency
+import com.revolut.account.exception.AccountNotFoundException
+import com.revolut.account.exception.InsufficientBalanceException
+import com.revolut.account.exception.SourceAccountNotFoundException
 import com.revolut.account.repository.AccountRepository
 import com.revolut.account.repository.BookRepository
 import spock.lang.Specification
@@ -119,6 +122,8 @@ class DefaultAccountServiceTest extends Specification {
 
         accountRepo.find(book.account) >> new Account()
         accountRepo.find(sourceAccount) >> new Account()
+        bookRepo.findDebits(sourceAccount) >> []
+        bookRepo.findCredits(sourceAccount) >> [10_000.50]
         bookRepo.save(_ as Book) >> { Book b ->
             savedBook = b
             savedBook
@@ -168,5 +173,27 @@ class DefaultAccountServiceTest extends Specification {
 
         then:
         thrown(SourceAccountNotFoundException)
+    }
+
+    def 'on credit from account with insufficient balance, should throw exception'() {
+        given:
+        def book = Book.builder()
+                .credit(500.00)
+                .currency(Currency.PHP)
+                .account(UUID.randomUUID())
+                .build()
+
+        def sourceAccount = UUID.randomUUID()
+
+        accountRepo.find(book.account) >> new Account()
+        accountRepo.find(sourceAccount) >> new Account()
+        bookRepo.findDebits(sourceAccount) >> []
+        bookRepo.findCredits(sourceAccount) >> []
+
+        when:
+        service.credit(book, sourceAccount)
+
+        then:
+        thrown(InsufficientBalanceException)
     }
 }

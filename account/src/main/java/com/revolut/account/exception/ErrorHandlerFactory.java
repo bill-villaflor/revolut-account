@@ -1,7 +1,5 @@
-package com.revolut.account.web;
+package com.revolut.account.exception;
 
-import com.revolut.account.service.AccountNotFoundException;
-import com.revolut.account.service.SourceAccountNotFoundException;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.core.convert.exceptions.ConversionErrorException;
 import io.micronaut.http.HttpResponse;
@@ -17,6 +15,13 @@ import static io.micronaut.http.HttpResponse.unprocessableEntity;
 
 @Factory
 public class ErrorHandlerFactory {
+    @Singleton
+    public ExceptionHandler<InsufficientBalanceException, HttpResponse> insufficientFundHandler() {
+        return (request, e) -> unprocessableEntity().body(error(
+                "ACCT002",
+                e.getMessage()));
+    }
+
     @Singleton
     public ExceptionHandler<SourceAccountNotFoundException, HttpResponse> sourceAccountNotFoundHandler() {
         return (request, e) -> unprocessableEntity().body(error(

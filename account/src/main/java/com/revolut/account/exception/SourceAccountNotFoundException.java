@@ -1,4 +1,4 @@
-package com.revolut.account.service;
+package com.revolut.account.exception;
 
 public class SourceAccountNotFoundException extends RuntimeException {
     public SourceAccountNotFoundException() {
