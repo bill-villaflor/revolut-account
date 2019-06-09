@@ -73,7 +73,7 @@ jooq {
                 properties {
                     property {
                         key = 'scripts'
-                        value = 'src/main/resources/migrations/'
+                        value = 'src/main/resources/db/migration/'
                     }
                     property {
                         key = 'sort'

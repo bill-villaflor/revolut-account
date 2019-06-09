@@ -27,6 +27,8 @@ public class Account {
     private Currency currency;
 
     private Instant creationDate;
+
+    @Builder.Default
     private BigDecimal balance = BigDecimal.ZERO;
 
     public void setBalance(BigDecimal balance) {

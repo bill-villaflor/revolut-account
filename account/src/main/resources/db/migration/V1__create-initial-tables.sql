@@ -9,9 +9,7 @@ CREATE TABLE books(
 	id UUID PRIMARY KEY,
 	debit DECIMAL(19, 4),
 	credit DECIMAL(19, 4),
-	source_account UUID,
-	target_account UUID NOT NULL,
+	account_id UUID NOT NULL,
     creation_date TIMESTAMP WITH TIME ZONE NOT NULL,
-    FOREIGN KEY(source_account) REFERENCES accounts(id),
-    FOREIGN KEY(target_account) REFERENCES accounts(id)
+    FOREIGN KEY(account_id) REFERENCES accounts(id)
 );

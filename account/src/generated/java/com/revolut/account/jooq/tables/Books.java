@@ -43,7 +43,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Books extends TableImpl<BooksRecord> {
 
-    private static final long serialVersionUID = -1081054812;
+    private static final long serialVersionUID = -1903167537;
 
     /**
      * The reference instance of <code>PUBLIC.BOOKS</code>
@@ -74,14 +74,9 @@ public class Books extends TableImpl<BooksRecord> {
     public final TableField<BooksRecord, BigDecimal> CREDIT = createField("CREDIT", org.jooq.impl.SQLDataType.DECIMAL(19, 4), this, "");
 
     /**
-     * The column <code>PUBLIC.BOOKS.SOURCE_ACCOUNT</code>.
+     * The column <code>PUBLIC.BOOKS.ACCOUNT_ID</code>.
      */
-    public final TableField<BooksRecord, UUID> SOURCE_ACCOUNT = createField("SOURCE_ACCOUNT", org.jooq.impl.SQLDataType.UUID.nullable(false), this, "");
-
-    /**
-     * The column <code>PUBLIC.BOOKS.TARGET_ACCOUNT</code>.
-     */
-    public final TableField<BooksRecord, UUID> TARGET_ACCOUNT = createField("TARGET_ACCOUNT", org.jooq.impl.SQLDataType.UUID.nullable(false), this, "");
+    public final TableField<BooksRecord, UUID> ACCOUNT_ID = createField("ACCOUNT_ID", org.jooq.impl.SQLDataType.UUID.nullable(false), this, "");
 
     /**
      * The column <code>PUBLIC.BOOKS.CREATION_DATE</code>.
@@ -134,7 +129,7 @@ public class Books extends TableImpl<BooksRecord> {
      */
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.CONSTRAINT_INDEX_3, Indexes.CONSTRAINT_INDEX_3C, Indexes.PRIMARY_KEY_3);
+        return Arrays.<Index>asList(Indexes.CONSTRAINT_INDEX_3, Indexes.PRIMARY_KEY_3);
     }
 
     /**
@@ -158,15 +153,11 @@ public class Books extends TableImpl<BooksRecord> {
      */
     @Override
     public List<ForeignKey<BooksRecord, ?>> getReferences() {
-        return Arrays.<ForeignKey<BooksRecord, ?>>asList(Keys.CONSTRAINT_3C, Keys.CONSTRAINT_3C7);
+        return Arrays.<ForeignKey<BooksRecord, ?>>asList(Keys.CONSTRAINT_3C);
     }
 
-    public Accounts constraint_3c() {
+    public Accounts accounts() {
         return new Accounts(this, Keys.CONSTRAINT_3C);
-    }
-
-    public Accounts constraint_3c7() {
-        return new Accounts(this, Keys.CONSTRAINT_3C7);
     }
 
     /**
