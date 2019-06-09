@@ -12,13 +12,24 @@ Feature: Create Account
             "balance": {decimal}
         }
 
+    Response Body:
+        {
+            "id": "{uuid}",
+            "customer": "{uuid}",
+            "currency": "{string}",
+            "balance": {decimal},
+            "creationDate": {instant}
+        }
+
   @positive_scenario
   Scenario: The user submits an API request to create an account
     Given user prepares an API request
     And request body has customer 912b3a5b-e9f1-43a5-a24f-648034a5c4ef
     And request body has currency PHP
     And request body has balance 10525.50
+
     When user submits a POST request to /accounts
+
     Then response status is 201
     And response body contains id
     And response body contains creationDate
@@ -31,7 +42,9 @@ Feature: Create Account
     Given user prepares an API request
     And request body has customer <customer>
     And request body has currency <currency>
+
     When user submits a POST request to /accounts
+
     Then response status is 400
     And response body contains message
     And response body has code <error_code>

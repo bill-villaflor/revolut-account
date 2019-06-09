@@ -41,8 +41,7 @@ class DefaultAccountServiceTest extends Specification {
         savedBook.id
         savedBook.credit == savedAccount.balance
         !savedBook.debit
-        savedBook.targetAccount == savedAccount.id
-        !savedBook.sourceAccount
+        savedBook.account == savedAccount.id
         savedBook.creationDate == savedAccount.creationDate
     }
 
@@ -71,5 +70,39 @@ class DefaultAccountServiceTest extends Specification {
         balance | _
         null    | _
         0.00    | _
+    }
+
+    def 'on get account by id, should return saved account with computed balance from repository'() {
+        given:
+        def account = Account.builder()
+                .customer(UUID.randomUUID())
+                .currency(Currency.PHP)
+                .build()
+
+        def credits = [10_000.00, 525.50]
+        def debits = [500.00, 25.50]
+        def balance = 10_000.00
+
+        accountRepo.find(account.id) >> account
+        bookRepo.findCredits(account.id) >> credits
+        bookRepo.findDebits(account.id) >> debits
+
+        when:
+        def returnedAccount = service.get(account.id)
+
+        then:
+        returnedAccount == account.withBalance(balance)
+    }
+
+    def 'on get a non-existent account, should throw exception'() {
+        given:
+        def account = UUID.randomUUID()
+        accountRepo.find(account) >> null
+
+        when:
+        service.get(account)
+
+        then:
+        thrown(AccountNotFoundException)
     }
 }

@@ -13,7 +13,7 @@ public class Book {
     private UUID id;
     private BigDecimal credit;
     private BigDecimal debit;
-    private UUID sourceAccount;
+    private UUID account;
     private UUID targetAccount;
     private Instant creationDate;
 }

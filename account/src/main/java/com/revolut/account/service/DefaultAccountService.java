@@ -6,7 +6,9 @@ import com.revolut.account.repository.AccountRepository;
 import com.revolut.account.repository.BookRepository;
 import io.micronaut.spring.tx.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 import static java.util.Objects.nonNull;
@@ -35,6 +37,18 @@ public class DefaultAccountService implements AccountService {
         return createdAccount;
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public Account get(UUID id) {
+        Account account = accountRepository.find(id);
+
+        if (Objects.isNull(account)) {
+            throw new AccountNotFoundException();
+        }
+
+        return account.withBalance(balance(id));
+    }
+
     private boolean hasInitialBalance(Account account) {
         return nonNull(account.getBalance()) && account.getBalance().intValue() != 0;
     }
@@ -43,10 +57,19 @@ public class DefaultAccountService implements AccountService {
         Book book = Book.builder()
                 .id(UUID.randomUUID())
                 .credit(account.getBalance())
-                .targetAccount(account.getId())
+                .account(account.getId())
                 .creationDate(account.getCreationDate())
                 .build();
 
         bookRepository.save(book);
+    }
+
+    private BigDecimal balance(UUID account) {
+        BigDecimal credit = bookRepository.findCredits(account).stream()
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal debit = bookRepository.findDebits(account).stream()
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return credit.subtract(debit);
     }
 }
