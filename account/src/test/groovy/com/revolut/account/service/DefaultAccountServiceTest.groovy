@@ -105,4 +105,68 @@ class DefaultAccountServiceTest extends Specification {
         then:
         thrown(AccountNotFoundException)
     }
+
+    def 'on credit account, should return created book'() {
+        given:
+        def book = Book.builder()
+                .credit(10_000.50)
+                .currency(Currency.PHP)
+                .account(UUID.randomUUID())
+                .build()
+
+        def sourceAccount = UUID.randomUUID()
+        def savedBook = null
+
+        accountRepo.find(book.account) >> new Account()
+        accountRepo.find(sourceAccount) >> new Account()
+        bookRepo.save(_ as Book) >> { Book b ->
+            savedBook = b
+            savedBook
+        }
+
+        when:
+        def createdBook = service.credit(book, sourceAccount)
+
+        then:
+        createdBook == savedBook
+    }
+
+    def 'on credit to non-existent account, should throw exception'() {
+        given:
+        def book = Book.builder()
+                .credit(10_000.50)
+                .currency(Currency.PHP)
+                .account(UUID.randomUUID())
+                .build()
+
+        def sourceAccount = UUID.randomUUID()
+
+        accountRepo.find(book.account) >> null
+
+        when:
+        service.credit(book, sourceAccount)
+
+        then:
+        thrown(AccountNotFoundException)
+    }
+
+    def 'on credit from non-existent account, should throw exception'() {
+        given:
+        def book = Book.builder()
+                .credit(10_000.50)
+                .currency(Currency.PHP)
+                .account(UUID.randomUUID())
+                .build()
+
+        def sourceAccount = UUID.randomUUID()
+
+        accountRepo.find(book.account) >> new Account()
+        accountRepo.find(sourceAccount) >> null
+
+        when:
+        service.credit(book, sourceAccount)
+
+        then:
+        thrown(SourceAccountNotFoundException)
+    }
 }

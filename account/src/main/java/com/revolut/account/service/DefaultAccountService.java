@@ -49,6 +49,30 @@ public class DefaultAccountService implements AccountService {
         return account.withBalance(balance(id));
     }
 
+    @Transactional
+    @Override
+    public Book credit(Book book, UUID sourceAccount) {
+        if (Objects.isNull(accountRepository.find(book.getAccount()))) {
+            throw new AccountNotFoundException();
+        }
+
+        if (Objects.isNull(accountRepository.find(sourceAccount))) {
+            throw new SourceAccountNotFoundException();
+        }
+
+        Book creditBook = book.withId(UUID.randomUUID())
+                .withCreationDate(Instant.now());
+
+        Book debitBook = creditBook.withId(UUID.randomUUID())
+                .withCredit(null)
+                .withDebit(creditBook.getCredit())
+                .withAccount(sourceAccount);
+
+        bookRepository.save(debitBook);
+
+        return bookRepository.save(creditBook);
+    }
+
     private boolean hasInitialBalance(Account account) {
         return nonNull(account.getBalance()) && account.getBalance().intValue() != 0;
     }
