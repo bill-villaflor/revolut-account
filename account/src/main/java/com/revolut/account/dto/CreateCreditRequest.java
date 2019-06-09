@@ -19,6 +19,7 @@ public class CreateCreditRequest {
     private UUID sourceAccount;
 
     @Positive
+    @NotNull
     private BigDecimal amount;
 
     @NotNull
