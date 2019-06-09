@@ -1,5 +1,9 @@
-package com.revolut.account.exception;
+package com.revolut.account.web;
 
+import com.revolut.account.exception.AccountNotFoundException;
+import com.revolut.account.exception.ErrorResponse;
+import com.revolut.account.exception.InsufficientBalanceException;
+import com.revolut.account.exception.SourceAccountNotFoundException;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.core.convert.exceptions.ConversionErrorException;
 import io.micronaut.http.HttpResponse;
