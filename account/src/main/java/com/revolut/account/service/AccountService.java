@@ -1,7 +1,7 @@
 package com.revolut.account.service;
 
 import com.revolut.account.domain.Account;
-import com.revolut.account.domain.Book;
+import com.revolut.account.domain.BookEntry;
 
 import java.util.UUID;
 
@@ -10,5 +10,5 @@ public interface AccountService {
 
     Account get(UUID id);
 
-    Book credit(Book book, UUID sourceAccount);
+    BookEntry credit(BookEntry bookEntry, UUID sourceAccount);
 }

@@ -1,7 +1,7 @@
 package com.revolut.account.web;
 
 import com.revolut.account.domain.Account;
-import com.revolut.account.domain.Book;
+import com.revolut.account.domain.BookEntry;
 import com.revolut.account.dto.CreateCreditRequest;
 import com.revolut.account.dto.CreateCreditResponse;
 import com.revolut.account.service.AccountService;
@@ -45,14 +45,14 @@ public class AccountController {
     @Post("/{id}/credits")
     @Produces(MediaType.APPLICATION_JSON)
     public HttpResponse<CreateCreditResponse> createCredit(UUID id, @Valid @Body CreateCreditRequest request) {
-        Book book = Book.builder()
+        BookEntry bookEntry = BookEntry.builder()
                 .credit(request.getAmount())
                 .currency(request.getCurrency())
                 .account(id)
                 .build();
 
-        Book createdBook = service.credit(book, request.getSourceAccount());
+        BookEntry createdBookEntry = service.credit(bookEntry, request.getSourceAccount());
 
-        return HttpResponse.created(new CreateCreditResponse(createdBook.getId()));
+        return HttpResponse.created(new CreateCreditResponse(createdBookEntry.getId()));
     }
 }

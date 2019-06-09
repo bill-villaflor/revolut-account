@@ -1,7 +1,10 @@
 package com.revolut.account.repository
 
 import com.revolut.account.domain.Book
+import com.revolut.account.domain.BookEntry
+import com.revolut.account.domain.Credit
 import com.revolut.account.domain.Currency
+import com.revolut.account.domain.Debit
 
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -15,7 +18,7 @@ class JooqBookRepositoryTest extends JooqRepositoryTestAbstract {
 
     def 'on save book, should store details in books table'() {
         given:
-        def book = Book.builder()
+        def bookEntry = BookEntry.builder()
                 .id(UUID.randomUUID())
                 .credit(10_000.50)
                 .debit(null)
@@ -23,125 +26,74 @@ class JooqBookRepositoryTest extends JooqRepositoryTestAbstract {
                 .creationDate(Instant.now())
                 .build()
 
-        insertAccount(book.account)
+        insertAccount(bookEntry.account)
 
         when:
-        def savedBook = repository.save(book)
+        def savedBookEntry = repository.save(bookEntry)
 
         then:
-        savedBook == book
-        assertBookIsInBooksTable(book)
+        savedBookEntry == bookEntry
+        assertBookEntryIsInBooksTable(bookEntry)
     }
 
-    def 'on find credits of an account, should return list of credited amount'() {
+    def 'on find book of an account, should return book with credits and debits'() {
         given:
         def account = UUID.randomUUID()
 
-        def books = [
-                Book.builder()
+        def bookEntries = [
+                BookEntry.builder()
                         .id(UUID.randomUUID())
-                        .credit(20_000.00)
+                        .credit(1_000.0000)
                         .account(account)
                         .creationDate(Instant.now())
                         .build(),
-                Book.builder()
+                BookEntry.builder()
                         .id(UUID.randomUUID())
-                        .debit(10_000.25)
+                        .credit(1_000.0000)
                         .account(account)
                         .creationDate(Instant.now())
                         .build(),
-                Book.builder()
+                BookEntry.builder()
                         .id(UUID.randomUUID())
-                        .credit(30_000.50)
+                        .debit(10_000.0000)
                         .account(account)
                         .creationDate(Instant.now())
                         .build(),
-                Book.builder()
+                BookEntry.builder()
                         .id(UUID.randomUUID())
-                        .credit(500.25)
+                        .debit(15_000.5000)
+                        .account(account)
+                        .creationDate(Instant.now())
+                        .build(),
+                BookEntry.builder()
+                        .id(UUID.randomUUID())
+                        .debit(200.2500)
                         .account(account)
                         .creationDate(Instant.now())
                         .build()
         ]
 
+        def credits = bookEntries.findAll { entry -> entry.credit }
+                .collect { entry -> new Credit(entry.credit, entry.creationDate) }
+        def debits = bookEntries.findAll { entry -> entry.debit }
+                .collect { entry -> new Debit(entry.debit, entry.creationDate) }
+
         insertAccount(account)
-        books.each { book -> insertBook(book) }
-
-        when:
-        def credits = repository.findCredits(account)
-
-        then:
-        credits == (books.findAll { book -> book.credit })*.credit
-    }
-
-    def 'on find credits of an account without credits, should return empty list'() {
-        given:
-        def account = UUID.randomUUID()
-        insertAccount(account)
+        bookEntries.each { bookEntry -> insertBookEntry(bookEntry) }
 
         expect:
-        repository.findCredits(account) == []
+        repository.find(account) == new Book(credits, debits)
     }
 
-    def 'on find debits of an account, should return list of debited amount'() {
-        given:
-        def account = UUID.randomUUID()
-
-        def books = [
-                Book.builder()
-                        .id(UUID.randomUUID())
-                        .debit(10_000.00)
-                        .account(account)
-                        .creationDate(Instant.now())
-                        .build(),
-                Book.builder()
-                        .id(UUID.randomUUID())
-                        .credit(1_000.00)
-                        .account(account)
-                        .creationDate(Instant.now())
-                        .build(),
-                Book.builder()
-                        .id(UUID.randomUUID())
-                        .debit(15_000.50)
-                        .account(account)
-                        .creationDate(Instant.now())
-                        .build(),
-                Book.builder()
-                        .id(UUID.randomUUID())
-                        .debit(200.25)
-                        .account(account)
-                        .creationDate(Instant.now())
-                        .build()
-        ]
-
-        insertAccount(account)
-        books.each { book -> insertBook(book) }
-
-        when:
-        def debits = repository.findDebits(account)
-
-        then:
-        debits == (books.findAll { book -> book.debit })*.debit
-    }
-
-    def 'on find debits of an account without debits, should return empty list'() {
-        given:
-        def account = UUID.randomUUID()
-        insertAccount(account)
-
-        expect:
-        repository.findDebits(account) == []
-    }
-
-    void assertBookIsInBooksTable(Book book) {
-        def savedBook = selectBook(book.id)
+    void assertBookEntryIsInBooksTable(BookEntry bookEntry) {
+        def savedBook = selectBookEntry(bookEntry.id)
 
         assert savedBook
-        assert savedBook.id == book.id
-        assert savedBook.credit == book.credit
-        assert savedBook.debit == book.debit
-        assert savedBook.accountId == book.account
-        assert savedBook.creationDate.toInstant() == book.creationDate
+        assert savedBook.id == bookEntry.id
+        assert savedBook.credit == bookEntry.credit
+        assert savedBook.debit == bookEntry.debit
+        assert savedBook.accountId == bookEntry.account
+        assert savedBook.creationDate.toInstant() == bookEntry.creationDate
     }
 
     def insertAccount(UUID id) {
@@ -153,19 +105,19 @@ class JooqBookRepositoryTest extends JooqRepositoryTestAbstract {
                 .execute()
     }
 
-    def selectBook(UUID book) {
+    def selectBookEntry(UUID bookEntry) {
         dslContext.selectFrom(BOOKS)
-                .where(BOOKS.ID.eq(book))
+                .where(BOOKS.ID.eq(bookEntry))
                 .fetchAny()
     }
 
-    def insertBook(Book book) {
+    def insertBookEntry(BookEntry bookEntry) {
         def record = dslContext.newRecord(BOOKS)
-        record.setId(book.id)
-        record.setCredit(book.credit)
-        record.setDebit(book.debit)
-        record.setAccountId(book.account)
-        record.setCreationDate(book.creationDate.atOffset(UTC))
+        record.setId(bookEntry.id)
+        record.setCredit(bookEntry.credit)
+        record.setDebit(bookEntry.debit)
+        record.setAccountId(bookEntry.account)
+        record.setCreationDate(bookEntry.creationDate.atOffset(UTC))
         record.store()
     }
 }

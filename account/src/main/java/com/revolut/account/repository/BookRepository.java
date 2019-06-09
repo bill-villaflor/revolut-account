@@ -1,15 +1,12 @@
 package com.revolut.account.repository;
 
 import com.revolut.account.domain.Book;
+import com.revolut.account.domain.BookEntry;
 
-import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
 public interface BookRepository {
-    Book save(Book book);
+    BookEntry save(BookEntry bookEntry);
 
-    List<BigDecimal> findCredits(UUID account);
-
-    List<BigDecimal> findDebits(UUID account);
+    Book find(UUID account);
 }

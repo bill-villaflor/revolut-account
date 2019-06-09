@@ -1,7 +1,7 @@
 package com.revolut.account.web
 
 import com.revolut.account.domain.Account
-import com.revolut.account.domain.Book
+import com.revolut.account.domain.BookEntry
 import com.revolut.account.domain.Currency
 import com.revolut.account.dto.CreateCreditRequest
 import com.revolut.account.dto.CreateCreditResponse
@@ -52,7 +52,7 @@ class AccountControllerTest extends Specification {
                 .currency(Currency.PHP)
                 .build()
 
-        def book = Book.builder()
+        def book = BookEntry.builder()
                 .credit(request.amount)
                 .currency(request.getCurrency())
                 .account(account.id)

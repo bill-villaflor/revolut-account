@@ -1,21 +1,23 @@
 package com.revolut.account.domain;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.experimental.Wither;
+import lombok.Value;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.UUID;
+import java.util.List;
 
-@Data
-@Builder
-@Wither
+@Value
 public class Book {
-    private UUID id;
-    private BigDecimal credit;
-    private BigDecimal debit;
-    private Currency currency;
-    private UUID account;
-    private Instant creationDate;
+    private List<Credit> credits;
+    private List<Debit> debits;
+
+    public BigDecimal getBalance() {
+        BigDecimal credit = credits.stream()
+                .map(Credit::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal debit = debits.stream()
+                .map(Debit::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return credit.subtract(debit);
+    }
 }

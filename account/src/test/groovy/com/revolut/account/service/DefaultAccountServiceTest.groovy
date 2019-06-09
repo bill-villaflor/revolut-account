@@ -2,6 +2,8 @@ package com.revolut.account.service
 
 import com.revolut.account.domain.Account
 import com.revolut.account.domain.Book
+import com.revolut.account.domain.BookEntry
+import com.revolut.account.domain.Credit
 import com.revolut.account.domain.Currency
 import com.revolut.account.exception.AccountNotFoundException
 import com.revolut.account.exception.InsufficientBalanceException
@@ -9,6 +11,8 @@ import com.revolut.account.exception.SourceAccountNotFoundException
 import com.revolut.account.repository.AccountRepository
 import com.revolut.account.repository.BookRepository
 import spock.lang.Specification
+
+import java.time.Instant
 
 class DefaultAccountServiceTest extends Specification {
     def accountRepo = Stub(AccountRepository)
@@ -24,16 +28,16 @@ class DefaultAccountServiceTest extends Specification {
                 .build()
 
         def savedAccount = Account.builder().build()
-        def savedBook = Book.builder().build()
+        def savedBookEntry = BookEntry.builder().build()
 
         accountRepo.save(_ as Account) >> { Account a ->
             savedAccount = a
             savedAccount
         }
 
-        bookRepo.save(_ as Book) >> { Book b ->
-            savedBook = b
-            savedBook
+        bookRepo.save(_ as BookEntry) >> { BookEntry b ->
+            savedBookEntry = b
+            savedBookEntry
         }
 
         when:
@@ -41,11 +45,11 @@ class DefaultAccountServiceTest extends Specification {
 
         then:
         returnedAccount == savedAccount
-        savedBook.id
-        savedBook.credit == savedAccount.balance
-        !savedBook.debit
-        savedBook.account == savedAccount.id
-        savedBook.creationDate == savedAccount.creationDate
+        savedBookEntry.id
+        savedBookEntry.credit == savedAccount.balance
+        !savedBookEntry.debit
+        savedBookEntry.account == savedAccount.id
+        savedBookEntry.creationDate == savedAccount.creationDate
     }
 
     def 'on create account without balance, should only save account'() {
@@ -82,19 +86,16 @@ class DefaultAccountServiceTest extends Specification {
                 .currency(Currency.PHP)
                 .build()
 
-        def credits = [10_000.00, 525.50]
-        def debits = [500.00, 25.50]
-        def balance = 10_000.00
+        def book = new Book([new Credit(10_000.00, Instant.now())], [])
 
         accountRepo.find(account.id) >> account
-        bookRepo.findCredits(account.id) >> credits
-        bookRepo.findDebits(account.id) >> debits
+        bookRepo.find(account.id) >> book
 
         when:
         def returnedAccount = service.get(account.id)
 
         then:
-        returnedAccount == account.withBalance(balance)
+        returnedAccount == account.withBalance(book.balance)
     }
 
     def 'on get a non-existent account, should throw exception'() {
@@ -111,34 +112,31 @@ class DefaultAccountServiceTest extends Specification {
 
     def 'on credit account, should return created book'() {
         given:
-        def book = Book.builder()
+        def bookEntry = BookEntry.builder()
                 .credit(10_000.50)
                 .currency(Currency.PHP)
                 .account(UUID.randomUUID())
                 .build()
 
+        def book = new Book([new Credit(10_000.50, Instant.now())], [])
         def sourceAccount = UUID.randomUUID()
-        def savedBook = null
+        def savedBookEntry = null
 
-        accountRepo.find(book.account) >> new Account()
+        accountRepo.find(bookEntry.account) >> new Account()
         accountRepo.find(sourceAccount) >> new Account()
-        bookRepo.findDebits(sourceAccount) >> []
-        bookRepo.findCredits(sourceAccount) >> [10_000.50]
-        bookRepo.save(_ as Book) >> { Book b ->
-            savedBook = b
-            savedBook
+        bookRepo.find(sourceAccount) >> book
+        bookRepo.save(_ as BookEntry) >> { BookEntry b ->
+            savedBookEntry = b
+            savedBookEntry
         }
 
-        when:
-        def createdBook = service.credit(book, sourceAccount)
-
-        then:
-        createdBook == savedBook
+        expect:
+        service.credit(bookEntry, sourceAccount) == savedBookEntry
     }
 
     def 'on credit to non-existent account, should throw exception'() {
         given:
-        def book = Book.builder()
+        def bookEntry = BookEntry.builder()
                 .credit(10_000.50)
                 .currency(Currency.PHP)
                 .account(UUID.randomUUID())
@@ -146,10 +144,10 @@ class DefaultAccountServiceTest extends Specification {
 
         def sourceAccount = UUID.randomUUID()
 
-        accountRepo.find(book.account) >> null
+        accountRepo.find(bookEntry.account) >> null
 
         when:
-        service.credit(book, sourceAccount)
+        service.credit(bookEntry, sourceAccount)
 
         then:
         thrown(AccountNotFoundException)
@@ -157,7 +155,7 @@ class DefaultAccountServiceTest extends Specification {
 
     def 'on credit from non-existent account, should throw exception'() {
         given:
-        def book = Book.builder()
+        def bookEntry = BookEntry.builder()
                 .credit(10_000.50)
                 .currency(Currency.PHP)
                 .account(UUID.randomUUID())
@@ -165,11 +163,11 @@ class DefaultAccountServiceTest extends Specification {
 
         def sourceAccount = UUID.randomUUID()
 
-        accountRepo.find(book.account) >> new Account()
+        accountRepo.find(bookEntry.account) >> new Account()
         accountRepo.find(sourceAccount) >> null
 
         when:
-        service.credit(book, sourceAccount)
+        service.credit(bookEntry, sourceAccount)
 
         then:
         thrown(SourceAccountNotFoundException)
@@ -177,21 +175,22 @@ class DefaultAccountServiceTest extends Specification {
 
     def 'on credit from account with insufficient balance, should throw exception'() {
         given:
-        def book = Book.builder()
+        def bookEntry = BookEntry.builder()
                 .credit(500.00)
                 .currency(Currency.PHP)
                 .account(UUID.randomUUID())
                 .build()
 
+        def book = new Book([new Credit(400.00, Instant.now())], [])
+
         def sourceAccount = UUID.randomUUID()
 
-        accountRepo.find(book.account) >> new Account()
+        accountRepo.find(bookEntry.account) >> new Account()
         accountRepo.find(sourceAccount) >> new Account()
-        bookRepo.findDebits(sourceAccount) >> []
-        bookRepo.findCredits(sourceAccount) >> []
+        bookRepo.find(sourceAccount) >> book
 
         when:
-        service.credit(book, sourceAccount)
+        service.credit(bookEntry, sourceAccount)
 
         then:
         thrown(InsufficientBalanceException)
