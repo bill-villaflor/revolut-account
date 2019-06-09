@@ -1,6 +1,9 @@
 package com.revolut.account.web;
 
-import com.revolut.account.service.AccountNotFoundException;
+import com.revolut.account.exception.AccountNotFoundException;
+import com.revolut.account.exception.ErrorResponse;
+import com.revolut.account.exception.InsufficientBalanceException;
+import com.revolut.account.exception.SourceAccountNotFoundException;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.core.convert.exceptions.ConversionErrorException;
 import io.micronaut.http.HttpResponse;
@@ -12,9 +15,24 @@ import javax.validation.ConstraintViolationException;
 import static io.micronaut.http.HttpResponse.badRequest;
 import static io.micronaut.http.HttpResponse.notFound;
 import static io.micronaut.http.HttpResponse.serverError;
+import static io.micronaut.http.HttpResponse.unprocessableEntity;
 
 @Factory
 public class ErrorHandlerFactory {
+    @Singleton
+    public ExceptionHandler<InsufficientBalanceException, HttpResponse> insufficientFundHandler() {
+        return (request, e) -> unprocessableEntity().body(error(
+                "ACCT002",
+                e.getMessage()));
+    }
+
+    @Singleton
+    public ExceptionHandler<SourceAccountNotFoundException, HttpResponse> sourceAccountNotFoundHandler() {
+        return (request, e) -> unprocessableEntity().body(error(
+                "ACCT001",
+                e.getMessage()));
+    }
+
     @Singleton
     public ExceptionHandler<AccountNotFoundException, HttpResponse> accountNotFoundHandler() {
         return (request, e) -> notFound(error(

@@ -1,10 +1,15 @@
 package com.revolut.account.web
 
 import com.revolut.account.domain.Account
+import com.revolut.account.domain.Book
 import com.revolut.account.domain.Currency
+import com.revolut.account.dto.CreateCreditRequest
+import com.revolut.account.dto.CreateCreditResponse
 import com.revolut.account.service.AccountService
 import io.micronaut.http.HttpStatus
 import spock.lang.Specification
+
+import java.time.Instant
 
 class AccountControllerTest extends Specification {
     def service = Mock(AccountService)
@@ -38,5 +43,31 @@ class AccountControllerTest extends Specification {
         then:
         response.body() == account
         response.status() == HttpStatus.OK
+    }
+
+    def 'on create account credit, should return reference id from service'() {
+        given:
+        def request = CreateCreditRequest.builder()
+                .sourceAccount(UUID.randomUUID())
+                .currency(Currency.PHP)
+                .build()
+
+        def book = Book.builder()
+                .credit(request.amount)
+                .currency(request.getCurrency())
+                .account(account.id)
+                .build()
+
+        def createdBook = book.withId(UUID.randomUUID())
+                .withCreationDate(Instant.now())
+
+        service.credit(book, request.sourceAccount) >> createdBook
+
+        when:
+        def response = controller.createCredit(account.id, request)
+
+        then:
+        response.status() == HttpStatus.CREATED
+        response.body() == new CreateCreditResponse(createdBook.id)
     }
 }

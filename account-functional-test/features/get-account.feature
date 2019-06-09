@@ -3,7 +3,7 @@ Feature: Get Account
     API to get a created customer account
 
     Endpoint:
-        POST {account_base_url}/accounts/{id}
+        GET {account_base_url}/accounts/{id}
 
     Response Body:
         {
@@ -21,10 +21,10 @@ Feature: Get Account
     And request body has currency PHP
     And request body has balance 200000.00
     And user submits a POST request to /accounts
+    And user keeps the id of the created resource as create_account
     And user prepares another API request
-    And request path references the generated resource id
 
-    When user submits a GET request to /accounts/$id
+    When user submits a GET request to /accounts/$create_account
 
     Then response status is 200
     And response body contains id

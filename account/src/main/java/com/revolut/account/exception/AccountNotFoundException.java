@@ -1,4 +1,4 @@
-package com.revolut.account.service;
+package com.revolut.account.exception;
 
 public class AccountNotFoundException extends RuntimeException {
     public AccountNotFoundException() {

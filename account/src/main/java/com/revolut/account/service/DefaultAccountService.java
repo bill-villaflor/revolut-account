@@ -2,6 +2,9 @@ package com.revolut.account.service;
 
 import com.revolut.account.domain.Account;
 import com.revolut.account.domain.Book;
+import com.revolut.account.exception.AccountNotFoundException;
+import com.revolut.account.exception.InsufficientBalanceException;
+import com.revolut.account.exception.SourceAccountNotFoundException;
 import com.revolut.account.repository.AccountRepository;
 import com.revolut.account.repository.BookRepository;
 import io.micronaut.spring.tx.annotation.Transactional;
@@ -31,7 +34,7 @@ public class DefaultAccountService implements AccountService {
         Account createdAccount = accountRepository.save(detailedAccount);
 
         if (hasInitialBalance(createdAccount)) {
-            credit(createdAccount);
+            creditInitialBalance(createdAccount);
         }
 
         return createdAccount;
@@ -46,14 +49,32 @@ public class DefaultAccountService implements AccountService {
             throw new AccountNotFoundException();
         }
 
-        return account.withBalance(balance(id));
+        return account.withBalance(getBalance(id));
+    }
+
+    @Transactional
+    @Override
+    public Book credit(Book book, UUID sourceAccount) {
+        validate(book, sourceAccount);
+
+        Book creditBook = book.withId(UUID.randomUUID())
+                .withCreationDate(Instant.now());
+
+        Book debitBook = creditBook.withId(UUID.randomUUID())
+                .withCredit(null)
+                .withDebit(creditBook.getCredit())
+                .withAccount(sourceAccount);
+
+        bookRepository.save(debitBook);
+
+        return bookRepository.save(creditBook);
     }
 
     private boolean hasInitialBalance(Account account) {
         return nonNull(account.getBalance()) && account.getBalance().intValue() != 0;
     }
 
-    private void credit(Account account) {
+    private void creditInitialBalance(Account account) {
         Book book = Book.builder()
                 .id(UUID.randomUUID())
                 .credit(account.getBalance())
@@ -64,7 +85,30 @@ public class DefaultAccountService implements AccountService {
         bookRepository.save(book);
     }
 
-    private BigDecimal balance(UUID account) {
+    private void validate(Book book, UUID sourceAccount) {
+        if (isNotExisting(book.getAccount())) {
+            throw new AccountNotFoundException();
+        }
+
+        if (isNotExisting(sourceAccount)) {
+            throw new SourceAccountNotFoundException();
+        }
+
+        if (hasInsufficientBalance(sourceAccount, book.getCredit())) {
+            throw new InsufficientBalanceException();
+        }
+    }
+
+    private boolean isNotExisting(UUID account) {
+        return Objects.isNull(accountRepository.find(account));
+    }
+
+    private boolean hasInsufficientBalance(UUID account, BigDecimal amount) {
+        BigDecimal balance = getBalance(account);
+        return amount.compareTo(balance) > 0;
+    }
+
+    private BigDecimal getBalance(UUID account) {
         BigDecimal credit = bookRepository.findCredits(account).stream()
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal debit = bookRepository.findDebits(account).stream()
