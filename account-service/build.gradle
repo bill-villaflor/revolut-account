@@ -9,7 +9,7 @@ plugins {
     id 'nu.studer.jooq' version '3.0.3'
 }
 
-version '0.1.0-SNAPSHOT'
+version '0.1.0'
 group 'com.revolut'
 
 sourceCompatibility = JavaVersion.VERSION_11
