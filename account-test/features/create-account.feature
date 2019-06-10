@@ -17,8 +17,7 @@ Feature: Create Account
             "id": "{uuid}",
             "customer": "{uuid}",
             "currency": "{string}",
-            "balance": {decimal},
-            "creationDate": {instant}
+            "balance": {decimal}
         }
 
   @positive_scenario
