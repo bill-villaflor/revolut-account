@@ -1,14 +1,14 @@
 package com.revolut.account.domain;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 import lombok.experimental.Wither;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-@Data
+@Value
 @Builder
 @Wither
 public class BookEntry {
