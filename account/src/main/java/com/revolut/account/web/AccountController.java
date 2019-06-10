@@ -54,12 +54,13 @@ public class AccountController {
     @Produces(MediaType.APPLICATION_JSON)
     public HttpResponse<CreditResponse> createCredit(UUID id, @Valid @Body CreateCreditRequest request) {
         BookEntry bookEntry = BookEntry.builder()
-                .credit(request.getAmount())
+                .amount(request.getAmount())
                 .currency(request.getCurrency())
-                .account(id)
+                .source(request.getSourceAccount())
+                .destination(id)
                 .build();
 
-        BookEntry createdBookEntry = service.credit(bookEntry, request.getSourceAccount());
+        BookEntry createdBookEntry = service.credit(bookEntry);
         return HttpResponse.created(new CreditResponse(createdBookEntry.getId()));
     }
 

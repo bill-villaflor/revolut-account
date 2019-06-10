@@ -17,7 +17,6 @@ import java.util.UUID;
 
 import static com.revolut.account.jooq.tables.Books.BOOKS;
 import static java.time.ZoneOffset.UTC;
-import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.toList;
 
 public class JooqBookRepository implements BookRepository {
@@ -54,9 +53,11 @@ public class JooqBookRepository implements BookRepository {
             while (cursor.hasNext()) {
                 Record record = cursor.fetchNext();
 
-                if (nonNull(record.get(BOOKS.DEBIT))) {
+                if (account.equals(record.get(BOOKS.SOURCE))) {
                     debits.add(toDebit(record));
-                } else if (nonNull(record.get(BOOKS.CREDIT))) {
+                }
+
+                if (account.equals(record.get(BOOKS.DESTINATION))) {
                     credits.add(toCredit(record));
                 }
             }
@@ -68,30 +69,31 @@ public class JooqBookRepository implements BookRepository {
     private BooksRecord toBooksRecord(BookEntry bookEntry) {
         BooksRecord record = create.newRecord(BOOKS);
         record.setId(bookEntry.getId());
-        record.setCredit(bookEntry.getCredit());
-        record.setDebit(bookEntry.getDebit());
-        record.setAccountId(bookEntry.getAccount());
+        record.setAmount(bookEntry.getAmount());
+        record.setSource(bookEntry.getSource());
+        record.setDestination(bookEntry.getDestination());
         record.setCreationDate(bookEntry.getCreationDate().atOffset(UTC));
 
         return record;
     }
 
     private Cursor findBookEntriesByAccount(UUID account) {
-        return create.select(BOOKS.DEBIT, BOOKS.CREDIT, BOOKS.CREATION_DATE)
+        return create.select(BOOKS.AMOUNT, BOOKS.SOURCE, BOOKS.DESTINATION, BOOKS.CREATION_DATE)
                 .from(BOOKS)
-                .where(BOOKS.ACCOUNT_ID.eq(account))
+                .where(BOOKS.SOURCE.eq(account)
+                        .or(BOOKS.DESTINATION.eq(account)))
                 .fetchLazy();
     }
 
     private Debit toDebit(Record record) {
-        BigDecimal amount = record.get(BOOKS.DEBIT);
+        BigDecimal amount = record.get(BOOKS.AMOUNT);
         Instant date = record.get(BOOKS.CREATION_DATE).toInstant();
 
         return new Debit(amount, date);
     }
 
     private Credit toCredit(Record record) {
-        BigDecimal amount = record.get(BOOKS.CREDIT);
+        BigDecimal amount = record.get(BOOKS.AMOUNT);
         Instant date = record.get(BOOKS.CREATION_DATE).toInstant();
 
         return new Credit(amount, date);

@@ -13,9 +13,9 @@ import java.util.UUID;
 @Wither
 public class BookEntry {
     private UUID id;
-    private BigDecimal credit;
-    private BigDecimal debit;
+    private BigDecimal amount;
     private Currency currency;
-    private UUID account;
+    private UUID source;
+    private UUID destination;
     private Instant creationDate;
 }

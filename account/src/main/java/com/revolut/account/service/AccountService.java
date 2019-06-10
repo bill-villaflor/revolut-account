@@ -10,5 +10,5 @@ public interface AccountService {
 
     Account get(UUID id);
 
-    BookEntry credit(BookEntry bookEntry, UUID sourceAccount);
+    BookEntry credit(BookEntry bookEntry);
 }

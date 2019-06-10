@@ -33,6 +33,7 @@ public class Indexes {
 
     public static final Index PRIMARY_KEY_A = Indexes0.PRIMARY_KEY_A;
     public static final Index CONSTRAINT_INDEX_3 = Indexes0.CONSTRAINT_INDEX_3;
+    public static final Index CONSTRAINT_INDEX_3C = Indexes0.CONSTRAINT_INDEX_3C;
     public static final Index PRIMARY_KEY_3 = Indexes0.PRIMARY_KEY_3;
 
     // -------------------------------------------------------------------------
@@ -41,7 +42,8 @@ public class Indexes {
 
     private static class Indexes0 {
         public static Index PRIMARY_KEY_A = Internal.createIndex("PRIMARY_KEY_A", Accounts.ACCOUNTS, new OrderField[] { Accounts.ACCOUNTS.ID }, true);
-        public static Index CONSTRAINT_INDEX_3 = Internal.createIndex("CONSTRAINT_INDEX_3", Books.BOOKS, new OrderField[] { Books.BOOKS.ACCOUNT_ID }, false);
+        public static Index CONSTRAINT_INDEX_3 = Internal.createIndex("CONSTRAINT_INDEX_3", Books.BOOKS, new OrderField[] { Books.BOOKS.SOURCE }, false);
+        public static Index CONSTRAINT_INDEX_3C = Internal.createIndex("CONSTRAINT_INDEX_3C", Books.BOOKS, new OrderField[] { Books.BOOKS.DESTINATION }, false);
         public static Index PRIMARY_KEY_3 = Internal.createIndex("PRIMARY_KEY_3", Books.BOOKS, new OrderField[] { Books.BOOKS.ID }, true);
     }
 }

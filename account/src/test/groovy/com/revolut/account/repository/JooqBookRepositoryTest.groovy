@@ -20,13 +20,14 @@ class JooqBookRepositoryTest extends JooqRepositoryTestAbstract {
         given:
         def bookEntry = BookEntry.builder()
                 .id(UUID.randomUUID())
-                .credit(10_000.50)
-                .debit(null)
-                .account(UUID.randomUUID())
+                .amount(10_000.50)
+                .source(UUID.randomUUID())
+                .destination(UUID.randomUUID())
                 .creationDate(Instant.now())
                 .build()
 
-        insertAccount(bookEntry.account)
+        insertAccount(bookEntry.source)
+        insertAccount(bookEntry.destination)
 
         when:
         def savedBookEntry = repository.save(bookEntry)
@@ -38,79 +39,91 @@ class JooqBookRepositoryTest extends JooqRepositoryTestAbstract {
 
     def 'on save book entries, should store details in books table'() {
         given:
-        def creditBookEntry = BookEntry.builder()
+        def firstBookEntry = BookEntry.builder()
                 .id(UUID.randomUUID())
-                .credit(10_000.50)
-                .account(UUID.randomUUID())
+                .amount(10_000.50)
+                .source(UUID.randomUUID())
+                .destination(UUID.randomUUID())
                 .creationDate(Instant.now())
                 .build()
 
-        def debitBookEntry = BookEntry.builder()
+        def secondBookEntry = BookEntry.builder()
                 .id(UUID.randomUUID())
-                .debit(500.50)
-                .account(UUID.randomUUID())
+                .amount(500.50)
+                .source(UUID.randomUUID())
+                .destination(UUID.randomUUID())
                 .creationDate(Instant.now())
                 .build()
 
-        insertAccount(creditBookEntry.account)
-        insertAccount(debitBookEntry.account)
+        insertAccount(firstBookEntry.source)
+        insertAccount(firstBookEntry.destination)
+        insertAccount(secondBookEntry.source)
+        insertAccount(secondBookEntry.destination)
 
         when:
-        def savedBookEntries = repository.saveAll([creditBookEntry, debitBookEntry])
+        def savedBookEntries = repository.saveAll([firstBookEntry, secondBookEntry])
 
         then:
-        savedBookEntries == [creditBookEntry, debitBookEntry]
-        assertBookEntryIsInBooksTable(creditBookEntry)
-        assertBookEntryIsInBooksTable(debitBookEntry)
+        savedBookEntries == [firstBookEntry, secondBookEntry]
+        assertBookEntryIsInBooksTable(firstBookEntry)
+        assertBookEntryIsInBooksTable(secondBookEntry)
     }
 
     def 'on find book of an account, should return book with credits and debits'() {
         given:
-        def account = UUID.randomUUID()
+        def firstAccount = UUID.randomUUID()
+        def secondAccount = UUID.randomUUID()
 
         def bookEntries = [
                 BookEntry.builder()
                         .id(UUID.randomUUID())
-                        .credit(1_000.0000)
-                        .account(account)
+                        .amount(1_000.0000)
+                        .source(secondAccount)
+                        .destination(firstAccount)
                         .creationDate(Instant.now())
                         .build(),
                 BookEntry.builder()
                         .id(UUID.randomUUID())
-                        .credit(1_000.0000)
-                        .account(account)
+                        .amount(1_000.0000)
+                        .source(secondAccount)
+                        .destination(firstAccount)
                         .creationDate(Instant.now())
                         .build(),
                 BookEntry.builder()
                         .id(UUID.randomUUID())
-                        .debit(10_000.0000)
-                        .account(account)
+                        .amount(10_000.0000)
+                        .source(firstAccount)
+                        .destination(secondAccount)
                         .creationDate(Instant.now())
                         .build(),
                 BookEntry.builder()
                         .id(UUID.randomUUID())
-                        .debit(15_000.5000)
-                        .account(account)
+                        .amount(15_000.5000)
+                        .source(firstAccount)
+                        .destination(secondAccount)
                         .creationDate(Instant.now())
                         .build(),
                 BookEntry.builder()
                         .id(UUID.randomUUID())
-                        .debit(200.2500)
-                        .account(account)
+                        .amount(200.2500)
+                        .source(firstAccount)
+                        .destination(secondAccount)
                         .creationDate(Instant.now())
                         .build()
         ]
 
-        def credits = bookEntries.findAll { entry -> entry.credit }
-                .collect { entry -> new Credit(entry.credit, entry.creationDate) }
-        def debits = bookEntries.findAll { entry -> entry.debit }
-                .collect { entry -> new Debit(entry.debit, entry.creationDate) }
+        def credits = bookEntries.findAll { entry -> entry.destination == firstAccount }
+                .collect { entry -> new Credit(entry.amount, entry.creationDate) }
+        def debits = bookEntries.findAll { entry -> entry.source == firstAccount }
+                .collect { entry -> new Debit(entry.amount, entry.creationDate) }
 
-        insertAccount(account)
+        insertAccount(firstAccount)
+        insertAccount(secondAccount)
+
         bookEntries.each { bookEntry -> insertBookEntry(bookEntry) }
 
         expect:
-        repository.find(account) == new Book(credits, debits)
+        repository.find(firstAccount) == new Book(credits, debits)
     }
 
     void assertBookEntryIsInBooksTable(BookEntry bookEntry) {
@@ -118,9 +131,9 @@ class JooqBookRepositoryTest extends JooqRepositoryTestAbstract {
 
         assert savedBook
         assert savedBook.id == bookEntry.id
-        assert savedBook.credit == bookEntry.credit
-        assert savedBook.debit == bookEntry.debit
-        assert savedBook.accountId == bookEntry.account
+        assert savedBook.amount == bookEntry.amount
+        assert savedBook.source == bookEntry.source
+        assert savedBook.destination == bookEntry.destination
         assert savedBook.creationDate.toInstant() == bookEntry.creationDate
     }
 
@@ -142,9 +155,9 @@ class JooqBookRepositoryTest extends JooqRepositoryTestAbstract {
     def insertBookEntry(BookEntry bookEntry) {
         def record = create.newRecord(BOOKS)
         record.setId(bookEntry.id)
-        record.setCredit(bookEntry.credit)
-        record.setDebit(bookEntry.debit)
-        record.setAccountId(bookEntry.account)
+        record.setAmount(bookEntry.amount)
+        record.setSource(bookEntry.source)
+        record.setDestination(bookEntry.destination)
         record.setCreationDate(bookEntry.creationDate.atOffset(UTC))
         record.store()
     }

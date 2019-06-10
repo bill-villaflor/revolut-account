@@ -47,6 +47,7 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final ForeignKey<BooksRecord, AccountsRecord> CONSTRAINT_3C = ForeignKeys0.CONSTRAINT_3C;
+    public static final ForeignKey<BooksRecord, AccountsRecord> CONSTRAINT_3C7 = ForeignKeys0.CONSTRAINT_3C7;
 
     // -------------------------------------------------------------------------
     // [#1459] distribute members to avoid static initialisers > 64kb
@@ -58,6 +59,7 @@ public class Keys {
     }
 
     private static class ForeignKeys0 {
-        public static final ForeignKey<BooksRecord, AccountsRecord> CONSTRAINT_3C = Internal.createForeignKey(com.revolut.account.jooq.Keys.CONSTRAINT_A, Books.BOOKS, "CONSTRAINT_3C", Books.BOOKS.ACCOUNT_ID);
+        public static final ForeignKey<BooksRecord, AccountsRecord> CONSTRAINT_3C = Internal.createForeignKey(com.revolut.account.jooq.Keys.CONSTRAINT_A, Books.BOOKS, "CONSTRAINT_3C", Books.BOOKS.SOURCE);
+        public static final ForeignKey<BooksRecord, AccountsRecord> CONSTRAINT_3C7 = Internal.createForeignKey(com.revolut.account.jooq.Keys.CONSTRAINT_A, Books.BOOKS, "CONSTRAINT_3C7", Books.BOOKS.DESTINATION);
     }
 }

@@ -57,20 +57,13 @@ public class DefaultAccountService implements AccountService {
 
     @Transactional
     @Override
-    public BookEntry credit(BookEntry bookEntry, UUID sourceAccount) {
-        validate(bookEntry, sourceAccount);
+    public BookEntry credit(BookEntry bookEntry) {
+        validate(bookEntry);
 
         BookEntry credit = bookEntry.withId(UUID.randomUUID())
                 .withCreationDate(Instant.now());
 
-        BookEntry debit = credit.withId(UUID.randomUUID())
-                .withCredit(null)
-                .withDebit(credit.getCredit())
-                .withAccount(sourceAccount);
-
-        bookRepository.saveAll(asList(credit, debit));
-
-        return credit;
+        return bookRepository.save(credit);
     }
 
     private boolean hasInitialBalance(Account account) {
@@ -80,27 +73,27 @@ public class DefaultAccountService implements AccountService {
     private void creditInitialBalance(Account account) {
         BookEntry bookEntry = BookEntry.builder()
                 .id(UUID.randomUUID())
-                .credit(account.getBalance())
-                .account(account.getId())
+                .amount(account.getBalance())
+                .destination(account.getId())
                 .creationDate(account.getCreationDate())
                 .build();
 
         bookRepository.save(bookEntry);
     }
 
-    private void validate(BookEntry bookEntry, UUID sourceAccount) {
-        List<UUID> accounts = asList(bookEntry.getAccount(), sourceAccount);
+    private void validate(BookEntry bookEntry) {
+        List<UUID> accounts = asList(bookEntry.getSource(), bookEntry.getDestination());
         List<UUID> existingAccounts = accountRepository.filterExisting(accounts);
 
-        if (!existingAccounts.contains(bookEntry.getAccount())) {
+        if (!existingAccounts.contains(bookEntry.getDestination())) {
             throw new AccountNotFoundException();
         }
 
-        if (!existingAccounts.contains(sourceAccount)) {
+        if (!existingAccounts.contains(bookEntry.getSource())) {
             throw new SourceAccountNotFoundException();
         }
 
-        if (hasInsufficientBalance(sourceAccount, bookEntry.getCredit())) {
+        if (hasInsufficientBalance(bookEntry.getSource(), bookEntry.getAmount())) {
             throw new InsufficientBalanceException();
         }
     }

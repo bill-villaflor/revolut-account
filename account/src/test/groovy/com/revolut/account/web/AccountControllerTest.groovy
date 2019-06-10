@@ -82,19 +82,21 @@ class AccountControllerTest extends Specification {
         def account = UUID.randomUUID()
         def request = CreateCreditRequest.builder()
                 .sourceAccount(UUID.randomUUID())
+                .amount(10_000.25)
                 .currency(Currency.PHP)
                 .build()
 
         def bookEntry = BookEntry.builder()
-                .credit(request.amount)
-                .currency(request.getCurrency())
-                .account(account)
+                .amount(request.amount)
+                .currency(request.currency)
+                .source(request.sourceAccount)
+                .destination(account)
                 .build()
 
         def createdBookEntry = bookEntry.withId(UUID.randomUUID())
                 .withCreationDate(Instant.now())
 
-        service.credit(bookEntry, request.sourceAccount) >> createdBookEntry
+        service.credit(bookEntry) >> createdBookEntry
 
         when:
         def response = controller.createCredit(account, request)

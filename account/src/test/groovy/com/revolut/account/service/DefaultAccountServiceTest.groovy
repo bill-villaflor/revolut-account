@@ -46,9 +46,9 @@ class DefaultAccountServiceTest extends Specification {
         then:
         returnedAccount == savedAccount
         savedBookEntry.id
-        savedBookEntry.credit == savedAccount.balance
-        !savedBookEntry.debit
-        savedBookEntry.account == savedAccount.id
+        savedBookEntry.amount == savedAccount.balance
+        !savedBookEntry.source
+        savedBookEntry.destination == savedAccount.id
         savedBookEntry.creationDate == savedAccount.creationDate
     }
 
@@ -82,8 +82,10 @@ class DefaultAccountServiceTest extends Specification {
     def 'on get account by id, should return saved account with computed balance from repository'() {
         given:
         def account = Account.builder()
+                .id(UUID.randomUUID())
                 .customer(UUID.randomUUID())
                 .currency(Currency.PHP)
+                .creationDate(Instant.now())
                 .build()
 
         def book = new Book([new Credit(10_000.00, Instant.now())], [])
@@ -113,45 +115,42 @@ class DefaultAccountServiceTest extends Specification {
     def 'on credit account, should return created book entry'() {
         given:
         def bookEntry = BookEntry.builder()
-                .credit(10_000.50)
+                .amount(10_000.50)
                 .currency(Currency.PHP)
-                .account(UUID.randomUUID())
+                .source(UUID.randomUUID())
+                .destination(UUID.randomUUID())
                 .build()
 
         def book = new Book([new Credit(10_000.50, Instant.now())], [])
-        def sourceAccount = UUID.randomUUID()
-        def savedBooksEntries = new ArrayList<BookEntry>()
+        def savedBookEntry = BookEntry.builder().build()
 
-        accountRepository.filterExisting(_ as List) >> [bookEntry.account, sourceAccount]
-        bookRepository.find(sourceAccount) >> book
-        bookRepository.saveAll(_ as List) >> { List args ->
-            savedBooksEntries = args.first()
-            savedBooksEntries
+        accountRepository.filterExisting(_ as List) >> [bookEntry.destination, bookEntry.source]
+        bookRepository.find(bookEntry.source) >> book
+        bookRepository.save(_ as BookEntry) >> { BookEntry b ->
+            savedBookEntry = b
+            savedBookEntry
         }
 
         when:
-        def returnedBookEntry = service.credit(bookEntry, sourceAccount)
+        def returnedBookEntry = service.credit(bookEntry)
 
         then:
-        returnedBookEntry == savedBooksEntries.find { b -> b.credit }
-        savedBooksEntries.size() == 2
-        savedBooksEntries.find { b -> b.debit }
+        returnedBookEntry == savedBookEntry
     }
 
     def 'on credit to non-existent account, should throw exception'() {
         given:
         def bookEntry = BookEntry.builder()
-                .credit(10_000.50)
+                .amount(10_000.50)
                 .currency(Currency.PHP)
-                .account(UUID.randomUUID())
+                .source(UUID.randomUUID())
+                .destination(UUID.randomUUID())
                 .build()
 
-        def sourceAccount = UUID.randomUUID()
-
-        accountRepository.find(bookEntry.account) >> null
+        accountRepository.find(bookEntry.destination) >> null
 
         when:
-        service.credit(bookEntry, sourceAccount)
+        service.credit(bookEntry)
 
         then:
         thrown(AccountNotFoundException)
@@ -160,17 +159,16 @@ class DefaultAccountServiceTest extends Specification {
     def 'on credit from non-existent account, should throw exception'() {
         given:
         def bookEntry = BookEntry.builder()
-                .credit(10_000.50)
+                .amount(10_000.50)
                 .currency(Currency.PHP)
-                .account(UUID.randomUUID())
+                .source(UUID.randomUUID())
+                .destination(UUID.randomUUID())
                 .build()
 
-        def sourceAccount = UUID.randomUUID()
-
-        accountRepository.filterExisting(_ as List) >> [bookEntry.account]
+        accountRepository.filterExisting(_ as List) >> [bookEntry.destination]
 
         when:
-        service.credit(bookEntry, sourceAccount)
+        service.credit(bookEntry)
 
         then:
         thrown(SourceAccountNotFoundException)
@@ -179,20 +177,19 @@ class DefaultAccountServiceTest extends Specification {
     def 'on credit from account with insufficient balance, should throw exception'() {
         given:
         def bookEntry = BookEntry.builder()
-                .credit(500.00)
+                .amount(500.00)
                 .currency(Currency.PHP)
-                .account(UUID.randomUUID())
+                .source(UUID.randomUUID())
+                .destination(UUID.randomUUID())
                 .build()
 
         def book = new Book([new Credit(400.00, Instant.now())], [])
 
-        def sourceAccount = UUID.randomUUID()
-
-        accountRepository.filterExisting(_ as List) >> [bookEntry.account, sourceAccount]
-        bookRepository.find(sourceAccount) >> book
+        accountRepository.filterExisting(_ as List) >> [bookEntry.source, bookEntry.destination]
+        bookRepository.find(bookEntry.source) >> book
 
         when:
-        service.credit(bookEntry, sourceAccount)
+        service.credit(bookEntry)
 
         then:
         thrown(InsufficientBalanceException)
