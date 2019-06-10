@@ -1,4 +1,4 @@
-package com.revolut.account.web;
+package com.revolut.account.dto;
 
 import lombok.Builder;
 import lombok.Data;

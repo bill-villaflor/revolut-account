@@ -1,5 +1,6 @@
 package com.revolut.account.web;
 
+import com.revolut.account.dto.ErrorResponse;
 import com.revolut.account.exception.AccountNotFoundException;
 import com.revolut.account.exception.InsufficientBalanceException;
 import com.revolut.account.exception.SourceAccountNotFoundException;
