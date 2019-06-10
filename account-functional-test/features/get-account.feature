@@ -34,14 +34,15 @@ Feature: Get Account
     And response body has balance 200000.0
 
   @negative_scenario
-  Scenario Outline: The user submits an API request to get a non-existent account
+  Scenario: The user submits an API request to get a non-existent account
     Given user prepares an API request
-    When user submits a GET request to /accounts/<account_id>
-    Then response status is <http_status>
+    When user submits a GET request to /accounts/11569bfb-fe57-4305-bb11-06012e32bf77
+    Then response status is 404
     And response body contains message
-    And response body has code <error_code>
+    And response body has code ACCT000
 
-    Examples:
-    | account_id                            | error_code    |   http_status |
-    | 11569bfb-fe57-4305-bb11-06012e32bf77  | ACCT000       |   404         |
-    | NOT_UUID                              | PARS000       |   400         |
+  @negative_scenario
+  Scenario: The user submits an API request to get an account with invalid id
+    Given user prepares an API request
+    When user submits a GET request to /accounts/INVALID
+    Then response status is 400

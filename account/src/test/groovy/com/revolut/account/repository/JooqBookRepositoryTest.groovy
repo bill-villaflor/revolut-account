@@ -14,7 +14,7 @@ import static com.revolut.account.jooq.tables.Books.BOOKS
 import static java.time.ZoneOffset.UTC
 
 class JooqBookRepositoryTest extends JooqRepositoryTestAbstract {
-    def repository = new JooqBookRepository(dslContext)
+    def repository = new JooqBookRepository(create)
 
     def 'on save book, should store details in books table'() {
         given:
@@ -34,6 +34,34 @@ class JooqBookRepositoryTest extends JooqRepositoryTestAbstract {
         then:
         savedBookEntry == bookEntry
         assertBookEntryIsInBooksTable(bookEntry)
+    }
+
+    def 'on save book entries, should store details in books table'() {
+        given:
+        def creditBookEntry = BookEntry.builder()
+                .id(UUID.randomUUID())
+                .credit(10_000.50)
+                .account(UUID.randomUUID())
+                .creationDate(Instant.now())
+                .build()
+
+        def debitBookEntry = BookEntry.builder()
+                .id(UUID.randomUUID())
+                .debit(500.50)
+                .account(UUID.randomUUID())
+                .creationDate(Instant.now())
+                .build()
+
+        insertAccount(creditBookEntry.account)
+        insertAccount(debitBookEntry.account)
+
+        when:
+        def savedBookEntries = repository.saveAll([creditBookEntry, debitBookEntry])
+
+        then:
+        savedBookEntries == [creditBookEntry, debitBookEntry]
+        assertBookEntryIsInBooksTable(creditBookEntry)
+        assertBookEntryIsInBooksTable(debitBookEntry)
     }
 
     def 'on find book of an account, should return book with credits and debits'() {
@@ -97,7 +125,7 @@ class JooqBookRepositoryTest extends JooqRepositoryTestAbstract {
     }
 
     def insertAccount(UUID id) {
-        dslContext.insertInto(ACCOUNTS)
+        create.insertInto(ACCOUNTS)
                 .set(ACCOUNTS.ID, id)
                 .set(ACCOUNTS.CUSTOMER_ID, UUID.randomUUID())
                 .set(ACCOUNTS.CURRENCY, Currency.PHP.toString())
@@ -106,13 +134,13 @@ class JooqBookRepositoryTest extends JooqRepositoryTestAbstract {
     }
 
     def selectBookEntry(UUID bookEntry) {
-        dslContext.selectFrom(BOOKS)
+        create.selectFrom(BOOKS)
                 .where(BOOKS.ID.eq(bookEntry))
                 .fetchAny()
     }
 
     def insertBookEntry(BookEntry bookEntry) {
-        def record = dslContext.newRecord(BOOKS)
+        def record = create.newRecord(BOOKS)
         record.setId(bookEntry.id)
         record.setCredit(bookEntry.credit)
         record.setDebit(bookEntry.debit)

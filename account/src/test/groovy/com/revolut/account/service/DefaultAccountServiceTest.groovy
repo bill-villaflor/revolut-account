@@ -15,9 +15,9 @@ import spock.lang.Specification
 import java.time.Instant
 
 class DefaultAccountServiceTest extends Specification {
-    def accountRepo = Stub(AccountRepository)
-    def bookRepo = Stub(BookRepository)
-    def service = new DefaultAccountService(accountRepo, bookRepo)
+    def accountRepository = Stub(AccountRepository)
+    def bookRepository = Stub(BookRepository)
+    def service = new DefaultAccountService(accountRepository, bookRepository)
 
     def 'on create account with initial balance, should save account and initial book entry'() {
         given:
@@ -30,12 +30,12 @@ class DefaultAccountServiceTest extends Specification {
         def savedAccount = Account.builder().build()
         def savedBookEntry = BookEntry.builder().build()
 
-        accountRepo.save(_ as Account) >> { Account a ->
+        accountRepository.save(_ as Account) >> { Account a ->
             savedAccount = a
             savedAccount
         }
 
-        bookRepo.save(_ as BookEntry) >> { BookEntry b ->
+        bookRepository.save(_ as BookEntry) >> { BookEntry b ->
             savedBookEntry = b
             savedBookEntry
         }
@@ -62,7 +62,7 @@ class DefaultAccountServiceTest extends Specification {
 
         def savedAccount = Account.builder().build()
 
-        accountRepo.save(_ as Account) >> { Account a ->
+        accountRepository.save(_ as Account) >> { Account a ->
             savedAccount = a
             savedAccount
         }
@@ -88,8 +88,8 @@ class DefaultAccountServiceTest extends Specification {
 
         def book = new Book([new Credit(10_000.00, Instant.now())], [])
 
-        accountRepo.find(account.id) >> account
-        bookRepo.find(account.id) >> book
+        accountRepository.find(account.id) >> account
+        bookRepository.find(account.id) >> book
 
         when:
         def returnedAccount = service.get(account.id)
@@ -101,7 +101,7 @@ class DefaultAccountServiceTest extends Specification {
     def 'on get a non-existent account, should throw exception'() {
         given:
         def account = UUID.randomUUID()
-        accountRepo.find(account) >> null
+        accountRepository.find(account) >> null
 
         when:
         service.get(account)
@@ -110,7 +110,7 @@ class DefaultAccountServiceTest extends Specification {
         thrown(AccountNotFoundException)
     }
 
-    def 'on credit account, should return created book'() {
+    def 'on credit account, should return created book entry'() {
         given:
         def bookEntry = BookEntry.builder()
                 .credit(10_000.50)
@@ -120,18 +120,22 @@ class DefaultAccountServiceTest extends Specification {
 
         def book = new Book([new Credit(10_000.50, Instant.now())], [])
         def sourceAccount = UUID.randomUUID()
-        def savedBookEntry = null
+        def savedBooksEntries = new ArrayList<BookEntry>()
 
-        accountRepo.find(bookEntry.account) >> new Account()
-        accountRepo.find(sourceAccount) >> new Account()
-        bookRepo.find(sourceAccount) >> book
-        bookRepo.save(_ as BookEntry) >> { BookEntry b ->
-            savedBookEntry = b
-            savedBookEntry
+        accountRepository.filterExisting(_ as List) >> [bookEntry.account, sourceAccount]
+        bookRepository.find(sourceAccount) >> book
+        bookRepository.saveAll(_ as List) >> { List args ->
+            savedBooksEntries = args.first()
+            savedBooksEntries
         }
 
-        expect:
-        service.credit(bookEntry, sourceAccount) == savedBookEntry
+        when:
+        def returnedBookEntry = service.credit(bookEntry, sourceAccount)
+
+        then:
+        returnedBookEntry == savedBooksEntries.find { b -> b.credit }
+        savedBooksEntries.size() == 2
+        savedBooksEntries.find { b -> b.debit }
     }
 
     def 'on credit to non-existent account, should throw exception'() {
@@ -144,7 +148,7 @@ class DefaultAccountServiceTest extends Specification {
 
         def sourceAccount = UUID.randomUUID()
 
-        accountRepo.find(bookEntry.account) >> null
+        accountRepository.find(bookEntry.account) >> null
 
         when:
         service.credit(bookEntry, sourceAccount)
@@ -163,8 +167,7 @@ class DefaultAccountServiceTest extends Specification {
 
         def sourceAccount = UUID.randomUUID()
 
-        accountRepo.find(bookEntry.account) >> new Account()
-        accountRepo.find(sourceAccount) >> null
+        accountRepository.filterExisting(_ as List) >> [bookEntry.account]
 
         when:
         service.credit(bookEntry, sourceAccount)
@@ -185,9 +188,8 @@ class DefaultAccountServiceTest extends Specification {
 
         def sourceAccount = UUID.randomUUID()
 
-        accountRepo.find(bookEntry.account) >> new Account()
-        accountRepo.find(sourceAccount) >> new Account()
-        bookRepo.find(sourceAccount) >> book
+        accountRepository.filterExisting(_ as List) >> [bookEntry.account, sourceAccount]
+        bookRepository.find(sourceAccount) >> book
 
         when:
         service.credit(bookEntry, sourceAccount)

@@ -12,9 +12,11 @@ import io.micronaut.spring.tx.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Objects;
+import java.util.List;
 import java.util.UUID;
 
+import static java.util.Arrays.asList;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 public class DefaultAccountService implements AccountService {
@@ -46,7 +48,7 @@ public class DefaultAccountService implements AccountService {
     public Account get(UUID id) {
         Account account = accountRepository.find(id);
 
-        if (Objects.isNull(account)) {
+        if (isNull(account)) {
             throw new AccountNotFoundException();
         }
 
@@ -58,17 +60,17 @@ public class DefaultAccountService implements AccountService {
     public BookEntry credit(BookEntry bookEntry, UUID sourceAccount) {
         validate(bookEntry, sourceAccount);
 
-        BookEntry creditBookEntry = bookEntry.withId(UUID.randomUUID())
+        BookEntry credit = bookEntry.withId(UUID.randomUUID())
                 .withCreationDate(Instant.now());
 
-        BookEntry debitBookEntry = creditBookEntry.withId(UUID.randomUUID())
+        BookEntry debit = credit.withId(UUID.randomUUID())
                 .withCredit(null)
-                .withDebit(creditBookEntry.getCredit())
+                .withDebit(credit.getCredit())
                 .withAccount(sourceAccount);
 
-        bookRepository.save(debitBookEntry);
+        bookRepository.saveAll(asList(credit, debit));
 
-        return bookRepository.save(creditBookEntry);
+        return credit;
     }
 
     private boolean hasInitialBalance(Account account) {
@@ -87,21 +89,20 @@ public class DefaultAccountService implements AccountService {
     }
 
     private void validate(BookEntry bookEntry, UUID sourceAccount) {
-        if (isNotExisting(bookEntry.getAccount())) {
+        List<UUID> accounts = asList(bookEntry.getAccount(), sourceAccount);
+        List<UUID> existingAccounts = accountRepository.filterExisting(accounts);
+
+        if (!existingAccounts.contains(bookEntry.getAccount())) {
             throw new AccountNotFoundException();
         }
 
-        if (isNotExisting(sourceAccount)) {
+        if (!existingAccounts.contains(sourceAccount)) {
             throw new SourceAccountNotFoundException();
         }
 
         if (hasInsufficientBalance(sourceAccount, bookEntry.getCredit())) {
             throw new InsufficientBalanceException();
         }
-    }
-
-    private boolean isNotExisting(UUID account) {
-        return Objects.isNull(accountRepository.find(account));
     }
 
     private boolean hasInsufficientBalance(UUID account, BigDecimal amount) {

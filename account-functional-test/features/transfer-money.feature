@@ -129,17 +129,15 @@ Feature: Transfer Money
       When user submits a POST request to /accounts/<target_account>/credits
 
       Then response status is 400
-      And response body contains message
-      And response body has code <error_code>
 
     Examples:
-    | target_account                        |   source_account                        | amount  |   currency    |   error_code  |
-    | INVALID                               |   23ba56ac-896b-4d48-b0da-3a34c4cc1969  | 1000.75 |   PHP         |   PARS000     |
-    | 23ba56ac-896b-4d48-b0da-3a34c4cc1969  |   INVALID                               | 1000.75 |   PHP         |   PARS000     |
-    | 23ba56ac-896b-4d48-b0da-3a34c4cc1969  |   NULL                                  | 1000.75 |   PHP         |   CNST000     |
-    | 23ba56ac-896b-4d48-b0da-3a34c4cc1969  |   23ba56ac-896b-4d48-b0da-3a34c4cc1969  | INVALID |   PHP         |   PARS000     |
-    | 23ba56ac-896b-4d48-b0da-3a34c4cc1969  |   23ba56ac-896b-4d48-b0da-3a34c4cc1969  | 0       |   PHP         |   CNST000     |
-    | 23ba56ac-896b-4d48-b0da-3a34c4cc1969  |   23ba56ac-896b-4d48-b0da-3a34c4cc1969  | -50000  |   PHP         |   CNST000     |
-    | 23ba56ac-896b-4d48-b0da-3a34c4cc1969  |   23ba56ac-896b-4d48-b0da-3a34c4cc1969  | NULL    |   PHP         |   CNST000     |
-    | 23ba56ac-896b-4d48-b0da-3a34c4cc1969  |   23ba56ac-896b-4d48-b0da-3a34c4cc1969  | 1000.75 |   PHPS        |   PARS000     |
-    | 23ba56ac-896b-4d48-b0da-3a34c4cc1969  |   23ba56ac-896b-4d48-b0da-3a34c4cc1969  | 1000.75 |   NULL        |   CNST000     |
+    | target_account                        |   source_account                        | amount  |   currency    |
+    | INVALID                               |   23ba56ac-896b-4d48-b0da-3a34c4cc1969  | 1000.75 |   PHP         |
+    | 23ba56ac-896b-4d48-b0da-3a34c4cc1969  |   INVALID                               | 1000.75 |   PHP         |
+    | 23ba56ac-896b-4d48-b0da-3a34c4cc1969  |   NULL                                  | 1000.75 |   PHP         |
+    | 23ba56ac-896b-4d48-b0da-3a34c4cc1969  |   23ba56ac-896b-4d48-b0da-3a34c4cc1969  | INVALID |   PHP         |
+    | 23ba56ac-896b-4d48-b0da-3a34c4cc1969  |   23ba56ac-896b-4d48-b0da-3a34c4cc1969  | 0       |   PHP         |
+    | 23ba56ac-896b-4d48-b0da-3a34c4cc1969  |   23ba56ac-896b-4d48-b0da-3a34c4cc1969  | -50000  |   PHP         |
+    | 23ba56ac-896b-4d48-b0da-3a34c4cc1969  |   23ba56ac-896b-4d48-b0da-3a34c4cc1969  | NULL    |   PHP         |
+    | 23ba56ac-896b-4d48-b0da-3a34c4cc1969  |   23ba56ac-896b-4d48-b0da-3a34c4cc1969  | 1000.75 |   PHPS        |
+    | 23ba56ac-896b-4d48-b0da-3a34c4cc1969  |   23ba56ac-896b-4d48-b0da-3a34c4cc1969  | 1000.75 |   NULL        |

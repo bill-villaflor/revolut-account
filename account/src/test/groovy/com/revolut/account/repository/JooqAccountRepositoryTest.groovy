@@ -9,7 +9,7 @@ import static com.revolut.account.jooq.tables.Accounts.ACCOUNTS
 import static java.time.ZoneOffset.UTC
 
 class JooqAccountRepositoryTest extends JooqRepositoryTestAbstract {
-    def repository = new JooqAccountRepository(dslContext)
+    def repository = new JooqAccountRepository(create)
 
     def 'on save account, should store details to accounts table'() {
         given:
@@ -48,6 +48,32 @@ class JooqAccountRepositoryTest extends JooqRepositoryTestAbstract {
         !repository.find(UUID.randomUUID())
     }
 
+    def 'on filter existing accounts, should return only accounts that are saved in accounts table'() {
+        given:
+        def firstAccount = Account.builder()
+                .id(UUID.randomUUID())
+                .customer(UUID.randomUUID())
+                .currency(Currency.PHP)
+                .creationDate(Instant.now())
+                .build()
+
+        def secondAccount = Account.builder()
+                .id(UUID.randomUUID())
+                .customer(UUID.randomUUID())
+                .currency(Currency.PHP)
+                .creationDate(Instant.now())
+                .build()
+
+        insertAccount(firstAccount)
+        insertAccount(secondAccount)
+
+        when:
+        def existingAccounts = repository.filterExisting([firstAccount.id, secondAccount.id, UUID.randomUUID()])
+
+        then:
+        existingAccounts.containsAll([firstAccount.id, secondAccount.id])
+    }
+
     void assertAccountIsInAccountsTable(Account account) {
         def savedAccount = selectAccount(account.id)
 
@@ -59,13 +85,13 @@ class JooqAccountRepositoryTest extends JooqRepositoryTestAbstract {
     }
 
     def selectAccount(UUID id) {
-        dslContext.selectFrom(ACCOUNTS)
+        create.selectFrom(ACCOUNTS)
                 .where(ACCOUNTS.ID.eq(id))
                 .fetchAny()
     }
 
     def insertAccount(Account account) {
-        dslContext.insertInto(ACCOUNTS)
+        create.insertInto(ACCOUNTS)
                 .set(ACCOUNTS.ID, account.id)
                 .set(ACCOUNTS.CUSTOMER_ID, account.customer)
                 .set(ACCOUNTS.CURRENCY, account.currency.toString())

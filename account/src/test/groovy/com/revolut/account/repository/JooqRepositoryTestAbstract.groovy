@@ -20,7 +20,7 @@ class JooqRepositoryTestAbstract extends Specification {
     def flyway = new Flyway(new ClassicConfiguration(dataSource: dataSource))
 
     @Shared
-    def dslContext = new DefaultDSLContext(dataSource, SQLDialect.H2)
+    def create = new DefaultDSLContext(dataSource, SQLDialect.H2)
 
     def setupSpec() {
         flyway.migrate()

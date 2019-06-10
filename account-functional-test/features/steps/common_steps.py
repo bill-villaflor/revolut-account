@@ -1,8 +1,9 @@
 import re
+from string import Template
+
 from assertpy import assert_that
 from behave import then, given, when
 from requests import api
-from string import Template
 
 
 @given('user prepares another API request')
@@ -52,7 +53,6 @@ def submit_request_step(context, http_method, resource_path):
         endpoint = template.substitute({key: context.response_stash[key]})
 
     context.response = api.request(http_method, endpoint, json=context.request['body'])
-
 
 @then('response status is {http_status}')
 def step_impl(context, http_status):

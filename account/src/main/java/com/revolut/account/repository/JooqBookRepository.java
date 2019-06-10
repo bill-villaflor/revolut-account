@@ -4,6 +4,7 @@ import com.revolut.account.domain.Book;
 import com.revolut.account.domain.BookEntry;
 import com.revolut.account.domain.Credit;
 import com.revolut.account.domain.Debit;
+import com.revolut.account.jooq.tables.records.BooksRecord;
 import org.jooq.Cursor;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -17,6 +18,7 @@ import java.util.UUID;
 import static com.revolut.account.jooq.tables.Books.BOOKS;
 import static java.time.ZoneOffset.UTC;
 import static java.util.Objects.nonNull;
+import static java.util.stream.Collectors.toList;
 
 public class JooqBookRepository implements BookRepository {
     private final DSLContext create;
@@ -27,20 +29,25 @@ public class JooqBookRepository implements BookRepository {
 
     @Override
     public BookEntry save(BookEntry bookEntry) {
-        create.insertInto(BOOKS)
-                .set(BOOKS.ID, bookEntry.getId())
-                .set(BOOKS.CREDIT, bookEntry.getCredit())
-                .set(BOOKS.DEBIT, bookEntry.getDebit())
-                .set(BOOKS.ACCOUNT_ID, bookEntry.getAccount())
-                .set(BOOKS.CREATION_DATE, bookEntry.getCreationDate().atOffset(UTC))
-                .execute();
+        toBooksRecord(bookEntry).store();
 
         return bookEntry;
     }
 
     @Override
+    public List<BookEntry> saveAll(List<BookEntry> bookEntries) {
+        List<BooksRecord> records = bookEntries.stream()
+                .map(this::toBooksRecord)
+                .collect(toList());
+
+        create.batchInsert(records).execute();
+
+        return bookEntries;
+    }
+
+    @Override
     public Book find(UUID account) {
-        try (Cursor cursor = create.fetchLazy(BOOKS, BOOKS.ACCOUNT_ID.eq(account))) {
+        try (Cursor cursor = findBookEntriesByAccount(account)) {
             List<Credit> credits = new ArrayList<>();
             List<Debit> debits = new ArrayList<>();
 
@@ -56,6 +63,24 @@ public class JooqBookRepository implements BookRepository {
 
             return new Book(credits, debits);
         }
+    }
+
+    private BooksRecord toBooksRecord(BookEntry bookEntry) {
+        BooksRecord record = create.newRecord(BOOKS);
+        record.setId(bookEntry.getId());
+        record.setCredit(bookEntry.getCredit());
+        record.setDebit(bookEntry.getDebit());
+        record.setAccountId(bookEntry.getAccount());
+        record.setCreationDate(bookEntry.getCreationDate().atOffset(UTC));
+
+        return record;
+    }
+
+    private Cursor findBookEntriesByAccount(UUID account) {
+        return create.select(BOOKS.DEBIT, BOOKS.CREDIT, BOOKS.CREATION_DATE)
+                .from(BOOKS)
+                .where(BOOKS.ACCOUNT_ID.eq(account))
+                .fetchLazy();
     }
 
     private Debit toDebit(Record record) {

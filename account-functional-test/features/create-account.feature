@@ -46,12 +46,10 @@ Feature: Create Account
     When user submits a POST request to /accounts
 
     Then response status is 400
-    And response body contains message
-    And response body has code <error_code>
 
     Examples:
-    | customer                              | currency      | error_code    |
-    | 43ee460b-fccf-40ca-904f-653f218205bf  | UNSUPPORTED   | PARS000       |
-    | NOT_UUID                              | PHP           | PARS000       |
-    | NULL                                  | PHP           | CNST000       |
-    | 152788a0-b169-4bca-a69c-a925f30bfa9c  | NULL          | CNST000       |
+    | customer                              | currency      |
+    | 43ee460b-fccf-40ca-904f-653f218205bf  | UNSUPPORTED   |
+    | NOT_UUID                              | PHP           |
+    | NULL                                  | PHP           |
+    | 152788a0-b169-4bca-a69c-a925f30bfa9c  | NULL          |
