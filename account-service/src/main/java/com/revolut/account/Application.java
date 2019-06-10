@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.info.Info;
 @OpenAPIDefinition(
         info = @Info(
                 title = "Account Service",
-                version = "0.1.0-SNAPSHOT",
+                version = "0.1.0",
                 description = "Service to Manage Account Creation, View and Money Transfer",
                 contact = @Contact(name = "Bill Villaflor", email = "bill.villaflor@gmail.com")
         )
