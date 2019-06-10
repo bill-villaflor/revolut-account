@@ -1,4 +1,4 @@
-package com.revolut.account.exception;
+package com.revolut.account.web;
 
 import lombok.Builder;
 import lombok.Data;
