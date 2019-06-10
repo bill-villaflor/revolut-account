@@ -9,6 +9,6 @@ import java.util.UUID;
 @Data
 @Builder
 @AllArgsConstructor
-public class CreateCreditResponse {
+public class CreditResponse {
     private UUID referenceId;
 }

@@ -3,7 +3,7 @@ Feature: Create Account
     API to create a customer account
 
     Endpoint:
-        POST {account_base_url}/accounts
+        POST {account_base_url}/v1/accounts
 
     Request Body:
         {
@@ -28,11 +28,10 @@ Feature: Create Account
     And request body has currency PHP
     And request body has balance 10525.50
 
-    When user submits a POST request to /accounts
+    When user submits a POST request to /v1/accounts
 
     Then response status is 201
     And response body contains id
-    And response body contains creationDate
     And response body has customer 912b3a5b-e9f1-43a5-a24f-648034a5c4ef
     And response body has currency PHP
     And response body has balance 10525.5
@@ -43,7 +42,7 @@ Feature: Create Account
     And request body has customer <customer>
     And request body has currency <currency>
 
-    When user submits a POST request to /accounts
+    When user submits a POST request to /v1/accounts
 
     Then response status is 400
 

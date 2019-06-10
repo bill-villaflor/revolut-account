@@ -7,22 +7,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class CreateCreditRequest {
+@NoArgsConstructor
+public class CreateAccountRequest {
     @NotNull
-    private UUID sourceAccount;
-
-    @Positive
-    @NotNull
-    private BigDecimal amount;
+    private UUID customer;
 
     @NotNull
     private Currency currency;
+
+    private BigDecimal balance;
 }

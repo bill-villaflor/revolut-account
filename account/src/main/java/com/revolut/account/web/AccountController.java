@@ -2,8 +2,10 @@ package com.revolut.account.web;
 
 import com.revolut.account.domain.Account;
 import com.revolut.account.domain.BookEntry;
+import com.revolut.account.dto.AccountResponse;
+import com.revolut.account.dto.CreateAccountRequest;
 import com.revolut.account.dto.CreateCreditRequest;
-import com.revolut.account.dto.CreateCreditResponse;
+import com.revolut.account.dto.CreditResponse;
 import com.revolut.account.service.AccountService;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
@@ -19,7 +21,7 @@ import javax.validation.Valid;
 import java.util.UUID;
 
 @Validated
-@Controller("/accounts")
+@Controller("/v1/accounts")
 public class AccountController {
     private final AccountService service;
 
@@ -30,21 +32,27 @@ public class AccountController {
 
     @Post
     @Produces(MediaType.APPLICATION_JSON)
-    public HttpResponse<Account> createAccount(@Valid @Body Account account) {
+    public HttpResponse<AccountResponse> createAccount(@Valid @Body CreateAccountRequest request) {
+        Account account = Account.builder()
+                .customer(request.getCustomer())
+                .currency(request.getCurrency())
+                .balance(request.getBalance())
+                .build();
+
         Account createdAccount = service.create(account);
-        return HttpResponse.created(createdAccount);
+        return HttpResponse.created(body(createdAccount));
     }
 
     @Get("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public HttpResponse<Account> getAccount(UUID id) {
+    public HttpResponse<AccountResponse> getAccount(UUID id) {
         Account account = service.get(id);
-        return HttpResponse.ok(account);
+        return HttpResponse.ok(body(account));
     }
 
     @Post("/{id}/credits")
     @Produces(MediaType.APPLICATION_JSON)
-    public HttpResponse<CreateCreditResponse> createCredit(UUID id, @Valid @Body CreateCreditRequest request) {
+    public HttpResponse<CreditResponse> createCredit(UUID id, @Valid @Body CreateCreditRequest request) {
         BookEntry bookEntry = BookEntry.builder()
                 .credit(request.getAmount())
                 .currency(request.getCurrency())
@@ -52,7 +60,15 @@ public class AccountController {
                 .build();
 
         BookEntry createdBookEntry = service.credit(bookEntry, request.getSourceAccount());
+        return HttpResponse.created(new CreditResponse(createdBookEntry.getId()));
+    }
 
-        return HttpResponse.created(new CreateCreditResponse(createdBookEntry.getId()));
+    private AccountResponse body(Account account) {
+        return AccountResponse.builder()
+                .id(account.getId())
+                .customer(account.getCustomer())
+                .currency(account.getCurrency())
+                .balance(account.getBalance())
+                .build();
     }
 }
