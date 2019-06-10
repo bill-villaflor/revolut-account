@@ -1,0 +1,4 @@
+.gradle
+.idea
+python-venv
+*.iml
