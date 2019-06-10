@@ -43,7 +43,6 @@ public class DefaultAccountService implements AccountService {
         return createdAccount;
     }
 
-    @Transactional(readOnly = true)
     @Override
     public Account get(UUID id) {
         Account account = accountRepository.find(id);
@@ -55,7 +54,6 @@ public class DefaultAccountService implements AccountService {
         return account.withBalance(getBalance(id));
     }
 
-    @Transactional
     @Override
     public BookEntry credit(BookEntry bookEntry) {
         validate(bookEntry);

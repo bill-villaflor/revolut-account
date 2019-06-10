@@ -37,38 +37,6 @@ class JooqBookRepositoryTest extends JooqRepositoryTestAbstract {
         assertBookEntryIsInBooksTable(bookEntry)
     }
 
-    def 'on save book entries, should store details in books table'() {
-        given:
-        def firstBookEntry = BookEntry.builder()
-                .id(UUID.randomUUID())
-                .amount(10_000.50)
-                .source(UUID.randomUUID())
-                .destination(UUID.randomUUID())
-                .creationDate(Instant.now())
-                .build()
-
-        def secondBookEntry = BookEntry.builder()
-                .id(UUID.randomUUID())
-                .amount(500.50)
-                .source(UUID.randomUUID())
-                .destination(UUID.randomUUID())
-                .creationDate(Instant.now())
-                .build()
-
-        insertAccount(firstBookEntry.source)
-        insertAccount(firstBookEntry.destination)
-        insertAccount(secondBookEntry.source)
-        insertAccount(secondBookEntry.destination)
-
-        when:
-        def savedBookEntries = repository.saveAll([firstBookEntry, secondBookEntry])
-
-        then:
-        savedBookEntries == [firstBookEntry, secondBookEntry]
-        assertBookEntryIsInBooksTable(firstBookEntry)
-        assertBookEntryIsInBooksTable(secondBookEntry)
-    }
-
     def 'on find book of an account, should return book with credits and debits'() {
         given:
         def firstAccount = UUID.randomUUID()

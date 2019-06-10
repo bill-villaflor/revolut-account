@@ -15,6 +15,7 @@ import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.Produces;
 import io.micronaut.validation.Validated;
+import io.swagger.v3.oas.annotations.Operation;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -32,6 +33,7 @@ public class AccountController {
 
     @Post
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Creates an account")
     public HttpResponse<AccountResponse> createAccount(@Valid @Body CreateAccountRequest request) {
         Account account = Account.builder()
                 .customer(request.getCustomer())
@@ -45,6 +47,7 @@ public class AccountController {
 
     @Get("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Gets a created account")
     public HttpResponse<AccountResponse> getAccount(UUID id) {
         Account account = service.get(id);
         return HttpResponse.ok(body(account));
@@ -52,6 +55,7 @@ public class AccountController {
 
     @Post("/{id}/credits")
     @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Credits an account from another source")
     public HttpResponse<CreditResponse> createCredit(UUID id, @Valid @Body CreateCreditRequest request) {
         BookEntry bookEntry = BookEntry.builder()
                 .amount(request.getAmount())

@@ -17,7 +17,6 @@ import java.util.UUID;
 
 import static com.revolut.account.jooq.tables.Books.BOOKS;
 import static java.time.ZoneOffset.UTC;
-import static java.util.stream.Collectors.toList;
 
 public class JooqBookRepository implements BookRepository {
     private final DSLContext create;
@@ -31,17 +30,6 @@ public class JooqBookRepository implements BookRepository {
         toBooksRecord(bookEntry).store();
 
         return bookEntry;
-    }
-
-    @Override
-    public List<BookEntry> saveAll(List<BookEntry> bookEntries) {
-        List<BooksRecord> records = bookEntries.stream()
-                .map(this::toBooksRecord)
-                .collect(toList());
-
-        create.batchInsert(records).execute();
-
-        return bookEntries;
     }
 
     @Override

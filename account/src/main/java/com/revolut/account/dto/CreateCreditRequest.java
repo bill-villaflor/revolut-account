@@ -1,6 +1,7 @@
 package com.revolut.account.dto;
 
 import com.revolut.account.domain.Currency;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name="CreateCredit", description="Create Credit Request")
 public class CreateCreditRequest {
     @NotNull
     private UUID sourceAccount;
