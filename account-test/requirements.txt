@@ -1,4 +1,4 @@
 behave==1.2.6
-requests==2.20.0
+requests==2.31.0
 assertpy==0.14
 configparser==3.7.4
